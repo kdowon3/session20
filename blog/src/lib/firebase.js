@@ -1,6 +1,8 @@
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
-import { collection, getDocs, query, orderBy, addDoc, doc, getDoc, updateDoc, deleteDoc } from "firebase/firestore";
+import { getStorage } from "firebase/storage";
+import { getAuth } from "firebase/auth"
+import { collection, getDocs, query, orderBy, addDoc, doc, getDoc, updateDoc, deleteDoc, setDoc } from "firebase/firestore";
 
 
 const firebaseConfig = {
@@ -16,6 +18,8 @@ const firebaseConfig = {
 // Firebase 초기화
 const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app);
+export const storage = getStorage(app);
+export const auth = getAuth(app);
 
 
 // 🔹 게시글 목록 가져오기 (Read)
@@ -47,34 +51,44 @@ export const getPostById = async (id) => {
   }
 };
 
-// 🔹 게시글 추가 (Create)
-export const addPost = async (title, content) => {
+// 🔹 게시글 추가 (이미지 포함)
+export const addPost = async (title, content, imageUrl = "") => {
   try {
     const docRef = await addDoc(collection(db, "posts"), {
       title,
       content,
+      imageUrl, // ✅ Firestore에 imageUrl 저장 추가
       createdAt: new Date(),
     });
+    console.log("📌 Firestore에 저장된 게시글:", { id: docRef.id, title, content, imageUrl });
     return docRef.id;
   } catch (error) {
     console.error("🔥 Firestore에 게시글 추가 중 오류 발생:", error);
   }
 };
 
-// 🔹 게시글 수정 (Update)
-export const updatePost = async (id, title, content) => {
+/// 🔹 게시글 수정 (Update)
+export const updatePost = async (id, title, content, imageUrl = null) => {
   try {
     const postRef = doc(db, "posts", id);
-    await updateDoc(postRef, {
+    
+    // 업데이트할 데이터 객체 생성
+    const updatedData = {
       title,
       content,
-    });
+    };
+
+    // 새로운 이미지가 있을 경우 imageUrl도 추가
+    if (imageUrl !== null) {
+      updatedData.imageUrl = imageUrl;
+    }
+
+    await updateDoc(postRef, updatedData);
     console.log(`✅ Firestore에서 게시글 업데이트 완료 (ID: ${id})`);
   } catch (error) {
     console.error("🔥 Firestore에서 게시글 업데이트 오류:", error);
   }
 };
-
 // 🔹 게시글 삭제 (Delete)
 export const deletePost = async (id) => {
   try {
@@ -83,5 +97,40 @@ export const deletePost = async (id) => {
     console.log(`✅ Firestore에서 게시글 삭제 완료 (ID: ${id})`);
   } catch (error) {
     console.error("🔥 Firestore에서 게시글 삭제 오류:", error);
+  }
+};
+
+// 🔹 Firestore `users` 컬렉션에 사용자 정보 저장
+export const createUserProfile = async (user) => {
+  if (!user) return;
+
+  const userRef = doc(db, "users", user.uid);
+  const userSnap = await getDoc(userRef);
+
+  if (!userSnap.exists()) {
+    const { email, displayName } = user;
+    const createdAt = new Date();
+
+    try {
+      await setDoc(userRef, { email, displayName, createdAt });
+      console.log("✅ Firestore에 유저 정보 저장 완료");
+    } catch (error) {
+      console.error("🔥 Firestore 유저 정보 저장 오류:", error);
+    }
+  }
+};
+
+
+// 🔹 Firestore에서 유저 정보 가져오기
+export const getUserProfile = async (uid) => {
+  if (!uid) return null;
+
+  const userRef = doc(db, "users", uid);
+  const userSnap = await getDoc(userRef);
+
+  if (userSnap.exists()) {
+    return userSnap.data();
+  } else {
+    return null;
   }
 };

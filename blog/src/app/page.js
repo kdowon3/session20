@@ -1,11 +1,30 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getPosts } from "../lib/firebase";
+import { getPosts, getUserProfile } from "@/lib/firebase";
+import { auth } from "@/lib/firebase";
 import Link from "next/link";
+import { onAuthStateChanged } from "firebase/auth";
 
 export default function Home() {
   const [posts, setPosts] = useState([]);
+  const [user, setUser] = useState(null);
+  const [userInfo, setUserInfo] = useState(null);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+      if (currentUser) {
+        fetchUserData(currentUser.uid);
+      }
+    });
+    return () => unsubscribe();
+  }, []);
+
+  const fetchUserData = async (uid) => {
+    const data = await getUserProfile(uid);
+    setUserInfo(data);
+  };
 
   useEffect(() => {
     async function fetchPosts() {
@@ -18,12 +37,15 @@ export default function Home() {
   return (
     <div className="container">
       <h1 className="title">블로그</h1>
+      {user && userInfo && <p className="user-email">환영합니다, {userInfo.email}님!</p>}
       <ul className="post-list">
         {posts.length > 0 ? (
           posts.map((post) => (
             <li key={post.id} className="post-item">
-              <Link href={`/edit/${post.id}`}>
-                <strong>{post.title}</strong>
+              <Link href={`/edit/${post.id}`} className="post-link">
+                <div className="post-content">
+                  <strong>{post.title}</strong>
+                </div>
               </Link>
             </li>
           ))
