@@ -42,7 +42,7 @@ export default function Home() {
         {posts.length > 0 ? (
           posts.map((post) => (
             <li key={post.id} className="post-item">
-              <Link href={`/edit/${post.id}`} className="post-link">
+              <Link href={`/post/${post.id}`} className="post-link">
                 <div className="post-content">
                   <strong>{post.title}</strong>
                 </div>

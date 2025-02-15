@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { auth } from "@/lib/firebase";
+import { auth, signInWithGoogle } from "@/lib/firebase";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { useRouter } from "next/navigation";
 
@@ -22,6 +22,16 @@ export default function Login() {
     }
   };
 
+  const handleGoogleLogin = async () => {
+    try {
+      await signInWithGoogle();
+      alert("Google 로그인 성공!");
+      router.push("/");
+    } catch (error) {
+      setError("Google 로그인 실패. 다시 시도해주세요.");
+    }
+  };
+
   return (
     <div className="container">
       <h1>로그인</h1>
@@ -31,6 +41,7 @@ export default function Login() {
         {error && <p className="error">{error}</p>}
         <button type="submit" className="btn">로그인</button>
       </form>
+      <button onClick={handleGoogleLogin} className="btn btn-google">Google로 로그인하기</button>
     </div>
   );
 }

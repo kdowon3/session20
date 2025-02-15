@@ -1,7 +1,7 @@
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
-import { getAuth } from "firebase/auth"
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut } from "firebase/auth"
 import { collection, getDocs, query, orderBy, addDoc, doc, getDoc, updateDoc, deleteDoc, setDoc } from "firebase/firestore";
 
 
@@ -138,5 +138,29 @@ export const getUserProfile = async (uid) => {
     return userSnap.data();
   } else {
     return null;
+  }
+};
+
+
+// 🔹 Google 로그인 함수
+export const signInWithGoogle = async () => {
+  const provider = new GoogleAuthProvider();
+  try {
+    const result = await signInWithPopup(auth, provider);
+    console.log("✅ Google 로그인 성공:", result.user);
+    return result.user;
+  } catch (error) {
+    console.error("🔥 Google 로그인 오류:", error);
+  }
+};
+
+
+// 🔹 로그아웃 함수
+export const logout = async () => {
+  try {
+    await signOut(auth);
+    console.log("✅ 로그아웃 성공");
+  } catch (error) {
+    console.error("🔥 로그아웃 오류:", error);
   }
 };
