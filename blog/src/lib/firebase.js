@@ -54,13 +54,19 @@ export const getPostById = async (id) => {
 // 🔹 게시글 추가 (이미지 포함)
 export const addPost = async (title, content, imageUrl = "") => {
   try {
+    const user = auth.currentUser; // ✅ 현재 로그인한 사용자 가져오기
+    if (!user) {
+      throw new Error("로그인이 필요합니다.");
+    }
+
     const docRef = await addDoc(collection(db, "posts"), {
       title,
       content,
       imageUrl, // ✅ Firestore에 imageUrl 저장 추가
       createdAt: new Date(),
+      userId: user.uid,
     });
-    console.log("📌 Firestore에 저장된 게시글:", { id: docRef.id, title, content, imageUrl });
+    console.log("📌 Firestore에 저장된 게시글:", { id: docRef.id, title, content, imageUrl, userId: user.uid });
     return docRef.id;
   } catch (error) {
     console.error("🔥 Firestore에 게시글 추가 중 오류 발생:", error);

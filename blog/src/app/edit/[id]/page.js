@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { getPostById, updatePost, deletePost } from "../../../lib/firebase";
+import { getPostById, updatePost, deletePost, getUserProfile } from "../../../lib/firebase";
 import { uploadImage } from "../../../lib/storage";
 
 export default function Edit() {
@@ -13,6 +13,7 @@ export default function Edit() {
     const [content, setContent] = useState("");
     const [image, setImage] = useState(null);
     const [imageUrl, setImageUrl] = useState("");
+    const [authorEmail, setAuthorEmail] = useState("");
     const [loading, setLoading] = useState(true);
   
     useEffect(() => {
@@ -26,6 +27,12 @@ export default function Edit() {
         setTitle(post.title);
         setContent(post.content);
         setImageUrl(post.imageUrl || "");
+
+        // 작성자 정보 가져오기
+        if (post.userId) {
+          const userProfile = await getUserProfile(post.userId);
+          setAuthorEmail(userProfile?.email || "알 수 없음");
+        }
         setLoading(false);
       }
       if (id) fetchPost();
@@ -60,6 +67,7 @@ export default function Edit() {
           <p className="loading">🔥 불러오는 중...</p>
         ) : (
           <div className="form">
+            <p className="author-info">작성자: {authorEmail}</p>
             <div className="form-group">
               <label className="form-label">제목</label>
               <input type="text" className="form-input" value={title} onChange={(e) => setTitle(e.target.value)} />

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { addPost } from "../../lib/firebase";
 import { uploadImage } from "../../lib/storage"; // 🔹 Storage 연동
 import { useRouter } from "next/navigation";
+import { auth } from "../../lib/firebase"
 
 export default function Create() {
   const router = useRouter();
@@ -23,7 +24,13 @@ export default function Create() {
       imageUrl = await uploadImage(image); // 🔹 이미지 업로드 후 URL 가져오기
     }
 
-    await addPost(title, content, imageUrl);
+    const user = auth.currentUser; // ✅ 현재 로그인한 사용자 가져오기
+    if (!user) {
+      alert("로그인이 필요합니다.");
+      return;
+    }
+
+    await addPost(title, content, imageUrl, user.uid);
     router.push("/");
   };
 
